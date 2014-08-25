@@ -1,0 +1,12 @@
+{
+	"original": true,
+	"minified": true,
+	"version": false,
+	"license": false,
+	"./app/js/": {
+		"jquery": "",
+		"jquery-signalr": "",
+		"angular": "",
+		"angular-animate": ""
+	}
+}

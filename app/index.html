@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="moments" ng-csp="">
+<head>
+		<meta charset="utf-8">
+		<title>Moments</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	    <link href="css/angular-csp.css" rel="stylesheet">
+	    <link href="css/font-awesome.css" rel="stylesheet">
+	    <link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+
+	<header role="banner" ng-controller="ScreenController as screens">
+
+       <div class="frame">
+
+            <a href="#" ng-click="minimize();" id="window-minimize" title="Minimize">&#48;</a>
+            <a href="#" ng-click="restore();" ng-show="isMaximized" title="Restore Down" id="window-restore">&#50;</a>
+            <a href="#" ng-click="maximize();" ng-hide="isMaximized" title="Maximize" id="window-maximize">&#49;</a>
+            <a href="#" ng-click="close();" id="window-close" title="Close">&#114;</a>
+        </div>
+
+		<nav role="navigation"></nav>
+	</header>
+
+<div style="margin-top: 20px;">
+
+<button>Pick Photos Folder...</button>
+
+<input type="file" id="files" webkitdirectory />
+
+
+
+</div>
+
+
+
+
+<div class="container" id="startView" ng-controller="HomeController as home">
+	<h1>Moments</h1>	
+</div>
+
+
+
+	<footer></footer>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/angular.js"></script>
+    <script src="js/ExifReader.js"></script>
+    <script src="js/chromestore.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/controllers.js"></script>
+
+</body>
+</html>
