@@ -7,33 +7,21 @@ Photo viewer with some simple managements features.
 
 
 ## Features:
-- Search for photos based upon name, the user account or groups.
-- View and select photos for download.
-- Download originals or high resolution photos to local disk storage.
-- Supports authentication (OAuth) to search for restricted and your private photos.
-
-- Note: The Flickr API restricts downloads to photos licensed under Creative Commons. The All Rights Reserved photos cannot be downloaded.
+- Scan local or network disks for photos.
+- Generates high resolution thumbnails used for rendering.
+- Supports offline mode with the high resolution thumbnails.
+- Built on nw.js for local and network disk access.
 
 
 ## Installation:
 
-The app is deployed on Chrome Web Store and can easily be installed there.
-If you want to develop and modify the source code yourself, you can easily fork the GitHub repository
-and then load it by going into Chrome/Settings/Extensions and choose the
-"Load unpacked extension" button. Pick the "DOwnloadr" folder within the repository.
-
-
-## Help:
-
-- Documentation: http://flickrdownloadr.codeplex.com/documentation
-- Issues: http://flickrdownloadr.codeplex.com/workitem/list/basic
-- Discussions: http://flickrdownloadr.codeplex.com/discussions
+Download and unzip to install.
 
 
 ## Contribute:
 
 You can contribute by uploading patches in the source code area:
-http://flickrdownloadr.codeplex.com/SourceControl/latest
+https://github.com/sondreb/Moments
 
 
 ## Credits:
@@ -41,7 +29,6 @@ http://flickrdownloadr.codeplex.com/SourceControl/latest
 - Icon by Everaldo Coelho: http://www.everaldo.com/
 - Link: http://iconfindr.com/1nmgPn6
 - ExifReader.js: https://github.com/mattiasw/ExifReader/blob/master/js/ExifReader.js
-
 
 - Icon by Bharath Prabhuswamy : http://bharathp666.deviantart.com/
 - Symbols by Font Awesome: http://fontawesome.io/
@@ -51,7 +38,7 @@ http://flickrdownloadr.codeplex.com/SourceControl/latest
 
 ## License (MIT):
 
-Copyright (C) 2007-2014 Sondre Bjellås - http://sondreb.com/
+Copyright (C) 2014-2015 Sondre Bjellås - http://sondreb.com/
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
