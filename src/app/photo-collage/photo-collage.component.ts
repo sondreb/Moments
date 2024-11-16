@@ -9,6 +9,7 @@ interface PhotoElement {
   width: number;
   height: number;
   rotation: number;
+  zIndex: number;
 }
 
 @Component({
@@ -30,6 +31,7 @@ export class PhotoCollageComponent implements AfterViewInit {
   private selectedPhoto: PhotoElement | null = null;
   private lastX = 0;
   private lastY = 0;
+  private maxZIndex = 0;
 
   ngAfterViewInit() {
     this.canvas = this.canvasRef.nativeElement;
@@ -49,6 +51,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+    this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
   }
 
   handleFileSelect(event: Event) {
@@ -76,6 +79,7 @@ export class PhotoCollageComponent implements AfterViewInit {
         y: Math.random() * (this.canvas.height - 200),
         width: 200,
         height: (200 * img.height) / img.width,
+        zIndex: ++this.maxZIndex,
         rotation: (Math.random() - 0.5) * 0.5
       });
     }
@@ -85,7 +89,9 @@ export class PhotoCollageComponent implements AfterViewInit {
   private render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
-    for (const photo of this.photos) {
+    const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
+    
+    for (const photo of sortedPhotos) {
       const img = new Image();
       img.src = photo.url;
       
@@ -145,5 +151,14 @@ export class PhotoCollageComponent implements AfterViewInit {
       x >= photo.x && x <= photo.x + photo.width &&
       y >= photo.y && y <= photo.y + photo.height
     ) || null;
+  }
+
+  private handleDoubleClick(event: MouseEvent) {
+    const photo = this.findPhotoAtPosition(event.offsetX, event.offsetY);
+    if (photo) {
+      this.maxZIndex++;
+      photo.zIndex = this.maxZIndex;
+      this.render();
+    }
   }
 }
