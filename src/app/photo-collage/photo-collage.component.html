@@ -1,0 +1,15 @@
+<div class="collage-container" 
+     (dragover)="$event.preventDefault()" 
+     (drop)="handleDrop($event)">
+  <canvas #canvas></canvas>
+  <input #fileInput 
+         type="file" 
+         accept="image/*" 
+         multiple 
+         (change)="handleFileSelect($event)" 
+         style="display: none">
+  <div class="controls">
+    <button (click)="fileInput.click()">Add Photos</button>
+    <button (click)="saveCollage()">Save Collage</button>
+  </div>
+</div>

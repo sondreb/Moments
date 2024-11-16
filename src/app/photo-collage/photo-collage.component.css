@@ -1,0 +1,38 @@
+.collage-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: move;
+}
+
+.controls {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.controls button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(0, 123, 255, 0.9);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.controls button:hover {
+  transform: scale(1.05);
+  background: rgba(0, 123, 255, 1);
+}
