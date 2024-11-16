@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface PhotoElement {
@@ -25,7 +25,7 @@ interface HoveredPhoto extends PhotoElement {
   templateUrl: './photo-collage.component.html',
   styleUrls: ['./photo-collage.component.css']
 })
-export class PhotoCollageComponent implements AfterViewInit {
+export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   
@@ -53,16 +53,31 @@ export class PhotoCollageComponent implements AfterViewInit {
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
 
+  private resizeHandler = () => {
+    this.setupCanvas();
+  };
+
   ngAfterViewInit() {
     this.canvas = this.canvasRef.nativeElement;
     this.ctx = this.canvas.getContext('2d')!;
     this.setupCanvas();
     this.setupEventListeners();
+    window.addEventListener('resize', this.resizeHandler);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.resizeHandler);
   }
 
   private setupCanvas() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    const parent = this.canvas.parentElement;
+    if (parent) {
+      this.canvas.width = parent.clientWidth;
+      this.canvas.height = parent.clientHeight;
+    } else {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+    }
     this.render();
   }
 
