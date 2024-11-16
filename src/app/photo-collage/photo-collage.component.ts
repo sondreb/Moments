@@ -59,6 +59,7 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
   private imageCache: Map<string, HTMLImageElement> = new Map();
+  saveSize: 'normal' | 'medium' | 'large' = 'medium';
 
   presets: CollagePreset[] = [
     {
@@ -211,11 +212,60 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   }
 
   saveCollage() {
-    const dataUrl = this.canvas.toDataURL('image/png');
+    // Adjust scale based on selected size
+    const scales = {
+      normal: 2,
+      medium: 3,
+      large: 6
+    };
+    const scale = scales[this.saveSize];
+    
+    // Rest of the saveCollage method remains the same
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = this.canvas.width * scale;
+    tempCanvas.height = this.canvas.height * scale;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (!tempCtx) return;
+    
+    // Clear and prepare the temporary canvas
+    tempCtx.fillStyle = 'white';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Sort photos by z-index
+    const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
+    
+    // Apply the same transforms as the main canvas, but scaled up
+    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+    tempCtx.translate(this.panX * scale, this.panY * scale);
+    tempCtx.scale(this.scale * scale, this.scale * scale);
+    
+    // Draw each photo at high resolution
+    for (const photo of sortedPhotos) {
+      const img = this.imageCache.get(photo.url);
+      if (!img) continue;
+      
+      tempCtx.save();
+      tempCtx.translate(photo.x + photo.width/2, photo.y + photo.height/2);
+      tempCtx.rotate(photo.rotation);
+      tempCtx.scale(photo.scale, photo.scale);
+      tempCtx.drawImage(img, -photo.width/2, -photo.height/2, photo.width, photo.height);
+      tempCtx.restore();
+    }
+    
+    // Reset transform
+    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+    
+    // Create download link
+    const dataUrl = tempCanvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = 'collage.png';
     link.href = dataUrl;
     link.click();
+  }
+
+  setSaveSize(size: 'normal' | 'medium' | 'large') {
+    this.saveSize = size;
   }
 
   private handleZoom(event: WheelEvent) {

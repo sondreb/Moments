@@ -43,7 +43,32 @@
          style="display: none">
   <div class="controls">
     <button (click)="fileInput.click()">Add Photos</button>
-    <button (click)="saveCollage()">Save Collage</button>
+    <div class="save-group">
+      <div class="save-options">
+        <div class="size-label">Size:</div>
+        <div class="size-buttons">
+          <button 
+            (click)="setSaveSize('normal')" 
+            [class.active]="saveSize === 'normal'"
+            class="size-btn">
+            Normal
+          </button>
+          <button 
+            (click)="setSaveSize('medium')" 
+            [class.active]="saveSize === 'medium'"
+            class="size-btn">
+            Medium
+          </button>
+          <button 
+            (click)="setSaveSize('large')" 
+            [class.active]="saveSize === 'large'"
+            class="size-btn">
+            Large
+          </button>
+        </div>
+      </div>
+      <button (click)="saveCollage()">Save Collage ({{saveSize}})</button>
+    </div>
     <button (click)="resetCollage()">Reset</button>
   </div>
 </div>

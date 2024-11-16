@@ -141,3 +141,100 @@ canvas {
 .remove-btn:hover {
   background: #ff6666;
 }
+
+.toggle-btn {
+  background: rgba(128, 128, 128, 0.9) !important;
+}
+
+.toggle-btn.active {
+  background: rgba(0, 200, 0, 0.9) !important;
+}
+
+.toggle-btn:hover {
+  background: rgba(128, 128, 128, 1) !important;
+}
+
+.toggle-btn.active:hover {
+  background: rgba(0, 200, 0, 1) !important;
+}
+
+.save-group {
+  position: relative;
+  display: inline-block;
+}
+
+.save-group:hover .save-options,
+.save-options:hover {
+  display: flex;
+}
+
+.save-options {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 2px);  /* Changed from 5px to 2px for closer proximity */
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 5px;
+  border-radius: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 0;  /* Removed margin-bottom */
+}
+
+/* Add a small connecting element to visually link the options with the button */
+.save-options:after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+.size-btn {
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  background: rgba(128, 128, 128, 0.9) !important;
+}
+
+.size-btn:hover {
+  background: rgba(128, 128, 128, 1) !important;
+}
+
+.size-btn.active {
+  background: rgba(0, 123, 255, 0.9) !important;
+}
+
+.size-btn.active:hover {
+  background: rgba(0, 123, 255, 1) !important;
+}
+
+.size-label {
+  color: white;
+  font-size: 12px;
+  text-align: center;
+}
+
+.size-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* Media query for touch devices */
+@media (hover: none) {
+  .save-options {
+    position: static;
+    margin: 0 0 10px 0;
+  }
+  
+  .save-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
