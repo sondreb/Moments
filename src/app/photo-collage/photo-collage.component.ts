@@ -277,10 +277,16 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     const canvasX = (x - this.panX) / this.scale;
     const canvasY = (y - this.panY) / this.scale;
     
-    return this.photos.find(photo => 
-      canvasX >= photo.x && canvasX <= photo.x + photo.width &&
-      canvasY >= photo.y && canvasY <= photo.y + photo.height
-    ) || null;
+    // Find all photos at this position and sort by z-index in descending order
+    const photosAtPosition = this.photos
+      .filter(photo => 
+        canvasX >= photo.x && canvasX <= photo.x + photo.width &&
+        canvasY >= photo.y && canvasY <= photo.y + photo.height
+      )
+      .sort((a, b) => b.zIndex - a.zIndex);
+    
+    // Return the topmost photo (highest z-index) or null if none found
+    return photosAtPosition[0] || null;
   }
 
   private handleDoubleClick(event: MouseEvent) {
@@ -419,21 +425,24 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
       const photo = this.findPhotoAtPosition(event.offsetX, event.offsetY);
       if (photo || this.isOnControls) {
         if (photo) {
-          // Convert photo position to screen coordinates
-          const screenX = (photo.x * this.scale) + this.panX;
-          const screenY = (photo.y * this.scale) + this.panY;
-          
-          this.hoveredPhoto = {
-            ...photo,
-            screenX,
-            screenY
-          };
-          
-          // Position controls in center of photo
-          this.controlsPosition = {
-            x: screenX + ((photo.width * photo.scale) * this.scale) / 2,
-            y: screenY + ((photo.height * photo.scale) * this.scale) / 2
-          };
+          // Only update if it's a different photo or no photo is currently hovered
+          if (!this.hoveredPhoto || this.hoveredPhoto.id !== photo.id) {
+            // Convert photo position to screen coordinates
+            const screenX = (photo.x * this.scale) + this.panX;
+            const screenY = (photo.y * this.scale) + this.panY;
+            
+            this.hoveredPhoto = {
+              ...photo,
+              screenX,
+              screenY
+            };
+            
+            // Position controls in center of photo
+            this.controlsPosition = {
+              x: screenX + ((photo.width * photo.scale) * this.scale) / 2,
+              y: screenY + ((photo.height * photo.scale) * this.scale) / 2
+            };
+          }
         }
       } else {
         this.hoveredPhoto = null;
