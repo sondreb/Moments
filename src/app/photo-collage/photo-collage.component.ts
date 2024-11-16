@@ -73,7 +73,11 @@ export class PhotoCollageComponent implements AfterViewInit {
     this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
     this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
     this.canvas.addEventListener('mousemove', this.handleHover.bind(this));
-    this.canvas.addEventListener('mouseleave', () => this.hoveredPhoto = null);
+    this.canvas.addEventListener('mouseleave', () => {
+      if (!this.isOnControls) {
+        this.hoveredPhoto = null;
+      }
+    });
   }
 
   handleFileSelect(event: Event) {
@@ -281,29 +285,31 @@ export class PhotoCollageComponent implements AfterViewInit {
 
   private getTouchDistance(touch1: Touch, touch2: Touch): number {
     const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
+    const dy = touch1.clientX - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
   }
 
   private handleHover(event: MouseEvent) {
     if (!this.isDragging) {
       const photo = this.findPhotoAtPosition(event.offsetX, event.offsetY);
-      if (photo) {
-        // Convert photo position to screen coordinates
-        const screenX = (photo.x * this.scale) + this.panX;
-        const screenY = (photo.y * this.scale) + this.panY;
-        
-        this.hoveredPhoto = {
-          ...photo,
-          screenX,
-          screenY
-        };
-        
-        // Position controls in center of photo
-        this.controlsPosition = {
-          x: screenX + ((photo.width * photo.scale) * this.scale) / 2,
-          y: screenY + ((photo.height * photo.scale) * this.scale) / 2
-        };
+      if (photo || this.isOnControls) {
+        if (photo) {
+          // Convert photo position to screen coordinates
+          const screenX = (photo.x * this.scale) + this.panX;
+          const screenY = (photo.y * this.scale) + this.panY;
+          
+          this.hoveredPhoto = {
+            ...photo,
+            screenX,
+            screenY
+          };
+          
+          // Position controls in center of photo
+          this.controlsPosition = {
+            x: screenX + ((photo.width * photo.scale) * this.scale) / 2,
+            y: screenY + ((photo.height * photo.scale) * this.scale) / 2
+          };
+        }
       } else {
         this.hoveredPhoto = null;
       }
@@ -322,5 +328,20 @@ export class PhotoCollageComponent implements AfterViewInit {
       this.hoveredPhoto.scale = Math.max(0.1, Math.min(5, this.hoveredPhoto.scale * factor));
       this.render();
     }
+  }
+
+  onControlsMouseEnter() {
+    this.isOnControls = true;
+  }
+
+  onControlsMouseLeave() {
+    this.isOnControls = false;
+    // Check if we're still over the photo
+    const rect = this.canvas.getBoundingClientRect();
+    const event = new MouseEvent('mousemove', {
+      clientX: this.lastX + rect.left,
+      clientY: this.lastY + rect.top
+    });
+    this.handleHover(event as any);
   }
 }

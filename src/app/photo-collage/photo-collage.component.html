@@ -3,7 +3,12 @@
      (drop)="handleDrop($event)">
   <div class="canvas-container">
     <canvas #canvas></canvas>
-    <div *ngIf="hoveredPhoto" class="photo-controls" [style.left.px]="controlsPosition.x" [style.top.px]="controlsPosition.y">
+    <div *ngIf="hoveredPhoto" 
+         class="photo-controls" 
+         [style.left.px]="controlsPosition.x" 
+         [style.top.px]="controlsPosition.y"
+         (mouseenter)="onControlsMouseEnter()"
+         (mouseleave)="onControlsMouseLeave()">
       <button (click)="rotatePhoto(-15)" class="control-btn">↺</button>
       <button (click)="rotatePhoto(15)" class="control-btn">↻</button>
       <button (click)="scalePhoto(0.9)" class="control-btn">-</button>
