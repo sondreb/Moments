@@ -10,6 +10,7 @@ interface PhotoElement {
   height: number;
   rotation: number;
   zIndex: number;
+  scale: number;
 }
 
 @Component({
@@ -32,6 +33,11 @@ export class PhotoCollageComponent implements AfterViewInit {
   private lastX = 0;
   private lastY = 0;
   private maxZIndex = 0;
+  private touches: Touch[] = [];
+  private lastDistance = 0;
+  private lastTapTime = 0;
+  private initialTouchDistance = 0;
+  private activePhoto: PhotoElement | null = null;
 
   ngAfterViewInit() {
     this.canvas = this.canvasRef.nativeElement;
@@ -52,6 +58,9 @@ export class PhotoCollageComponent implements AfterViewInit {
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
     this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
+    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
+    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
+    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
   }
 
   handleFileSelect(event: Event) {
@@ -80,6 +89,7 @@ export class PhotoCollageComponent implements AfterViewInit {
         width: 200,
         height: (200 * img.height) / img.width,
         zIndex: ++this.maxZIndex,
+        scale: 1,
         rotation: (Math.random() - 0.5) * 0.5
       });
     }
@@ -91,6 +101,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     
     const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
     
+    this.ctx.scale(this.scale, this.scale);
     for (const photo of sortedPhotos) {
       const img = new Image();
       img.src = photo.url;
@@ -98,9 +109,11 @@ export class PhotoCollageComponent implements AfterViewInit {
       this.ctx.save();
       this.ctx.translate(photo.x + photo.width/2, photo.y + photo.height/2);
       this.ctx.rotate(photo.rotation);
+      this.ctx.scale(photo.scale, photo.scale);
       this.ctx.drawImage(img, -photo.width/2, -photo.height/2, photo.width, photo.height);
       this.ctx.restore();
     }
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
   }
 
   saveCollage() {
@@ -160,5 +173,77 @@ export class PhotoCollageComponent implements AfterViewInit {
       photo.zIndex = this.maxZIndex;
       this.render();
     }
+  }
+
+  private handleTouchStart(event: TouchEvent) {
+    event.preventDefault();
+    this.touches = Array.from(event.touches);
+
+    if (this.touches.length === 1) {
+      const touch = this.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      // Check for double tap
+      const now = Date.now();
+      if (now - this.lastTapTime < 300) {
+        this.handleDoubleClick({ offsetX: x, offsetY: y } as MouseEvent);
+      }
+      this.lastTapTime = now;
+
+      // Handle single touch as mouse down
+      this.handleMouseDown({ offsetX: x, offsetY: y } as MouseEvent);
+    } else if (this.touches.length === 2) {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = (this.touches[0].clientX + this.touches[1].clientX) / 2 - rect.left;
+      const y = (this.touches[0].clientY + this.touches[1].clientY) / 2 - rect.top;
+      
+      this.activePhoto = this.findPhotoAtPosition(x, y);
+      this.initialTouchDistance = this.getTouchDistance(this.touches[0], this.touches[1]);
+    }
+  }
+
+  private handleTouchMove(event: TouchEvent) {
+    event.preventDefault();
+    const touches = Array.from(event.touches);
+
+    if (touches.length === 1 && this.isDragging) {
+      const touch = touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      this.handleMouseMove({ offsetX: x, offsetY: y } as MouseEvent);
+    } else if (touches.length === 2) {
+      const currentDistance = this.getTouchDistance(touches[0], touches[1]);
+      const delta = (currentDistance - this.initialTouchDistance) * 0.001;
+
+      if (this.activePhoto) {
+        // Zoom individual photo
+        this.activePhoto.scale = Math.max(0.1, Math.min(5, this.activePhoto.scale + delta));
+      } else {
+        // Zoom entire canvas
+        this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+      }
+      
+      this.initialTouchDistance = currentDistance;
+      this.render();
+    }
+  }
+
+  private handleTouchEnd(event: TouchEvent) {
+    event.preventDefault();
+    if (event.touches.length === 0) {
+      this.handleMouseUp();
+      this.activePhoto = null;
+    }
+    this.touches = Array.from(event.touches);
+  }
+
+  private getTouchDistance(touch1: Touch, touch2: Touch): number {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
   }
 }
