@@ -3,7 +3,7 @@ Moments (0.0.2)
 
 ## Description:
 
-Photo viewer with collage capabilities. Open a folder with photos, make a collage without window borders and save it as a new image.
+Moments is a beautiful and elegant photography viewer and collage maker. Open a folder with photos, make a collage without window borders and save it as a new image.
 
 ## Installation:
 
