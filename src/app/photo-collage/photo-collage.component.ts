@@ -150,8 +150,21 @@ export class PhotoCollageComponent implements AfterViewInit {
 
   private handleZoom(event: WheelEvent) {
     event.preventDefault();
+    
+    // Calculate zoom point in canvas space
+    const zoomPoint = {
+      x: (event.offsetX - this.panX) / this.scale,
+      y: (event.offsetY - this.panY) / this.scale
+    };
+
+    const prevScale = this.scale;
     const delta = -Math.sign(event.deltaY) * 0.1;
     this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+
+    // Adjust pan to keep zoom centered on cursor
+    this.panX = event.offsetX - (zoomPoint.x * this.scale);
+    this.panY = event.offsetY - (zoomPoint.y * this.scale);
+
     this.render();
   }
 
