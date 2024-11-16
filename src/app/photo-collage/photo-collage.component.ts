@@ -466,24 +466,50 @@ export class PhotoCollageComponent implements AfterViewInit {
   }
 
   moveToBack(photo: PhotoElement) {
-    // Shift all photos up by 1
+    const currentPhoto = this.photos.find(p => p.id === photo.id);
+    if (!currentPhoto) return;
+
+    const currentZ = currentPhoto.zIndex;
+    
+    // Shift all photos below the current one up by 1
     this.photos.forEach(p => {
-      if (p.zIndex < photo.zIndex) {
-        p.zIndex += 1;
+      if (p.zIndex < currentZ) {
+        p.zIndex++;
       }
     });
-    photo.zIndex = 0;
+    
+    // Move current photo to back
+    currentPhoto.zIndex = 0;
+
+    // Update hovered photo to stay in sync
+    if (this.hoveredPhoto && this.hoveredPhoto.id === currentPhoto.id) {
+      this.hoveredPhoto.zIndex = 0;
+    }
+
     this.render();
   }
 
   moveToFront(photo: PhotoElement) {
-    // Shift all photos down by 1
+    const currentPhoto = this.photos.find(p => p.id === photo.id);
+    if (!currentPhoto) return;
+
+    const currentZ = currentPhoto.zIndex;
+    
+    // Shift all photos above the current one down by 1
     this.photos.forEach(p => {
-      if (p.zIndex > photo.zIndex) {
-        p.zIndex -= 1;
+      if (p.zIndex > currentZ) {
+        p.zIndex--;
       }
     });
-    photo.zIndex = this.maxZIndex;
+    
+    // Move current photo to front
+    currentPhoto.zIndex = this.maxZIndex;
+
+    // Update hovered photo to stay in sync
+    if (this.hoveredPhoto && this.hoveredPhoto.id === currentPhoto.id) {
+      this.hoveredPhoto.zIndex = this.maxZIndex;
+    }
+
     this.render();
   }
 }
