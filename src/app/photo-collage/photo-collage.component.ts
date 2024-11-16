@@ -586,6 +586,23 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     this.render();
   }
 
+  removePhoto(photo: PhotoElement) {
+    // Find and remove the photo from the array
+    const index = this.photos.findIndex(p => p.id === photo.id);
+    if (index !== -1) {
+      // Remove the photo's object URL to prevent memory leaks
+      URL.revokeObjectURL(photo.url);
+      this.photos.splice(index, 1);
+      
+      // Reset hovered photo if it was the removed one
+      if (this.hoveredPhoto && this.hoveredPhoto.id === photo.id) {
+        this.hoveredPhoto = null;
+      }
+      
+      this.render();
+    }
+  }
+
   private applyGridLayout() {
     if (!this.photos.length) return;
 

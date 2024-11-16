@@ -30,6 +30,9 @@
         <button (click)="moveToBack(hoveredPhoto)" class="control-btn">⤓</button>
         <button (click)="moveToFront(hoveredPhoto)" class="control-btn">⤒</button>
       </div>
+      <div class="controls-row">
+        <button (click)="removePhoto(hoveredPhoto)" class="control-btn remove-btn">×</button>
+      </div>
     </div>
   </div>
   <input #fileInput 
