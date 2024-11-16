@@ -1,44 +1,22 @@
-Moments (0.0.1)
+Moments (0.0.2)
 ============
 
 ## Description:
 
-Photo viewer with some simple managements features.
-
-
-## Features:
-- Scan local or network disks for photos.
-- Generates high resolution thumbnails used for rendering.
-- Supports offline mode with the high resolution thumbnails.
-- Built on nw.js for local and network disk access.
-
+Photo viewer with collage capabilities. Open a folder with photos, make a collage without window borders and save it as a new image.
 
 ## Installation:
 
 Download and unzip to install.
-
 
 ## Contribute:
 
 You can contribute by uploading patches in the source code area:
 https://github.com/sondreb/Moments
 
-
-## Credits:
-- Developed by Sondre Bjellås: http://brain.no/
-- Icon by Everaldo Coelho: http://www.everaldo.com/
-- Link: http://iconfindr.com/1nmgPn6
-- ExifReader.js: https://github.com/mattiasw/ExifReader/blob/master/js/ExifReader.js
-
-- Icon by Bharath Prabhuswamy : http://bharathp666.deviantart.com/
-- Symbols by Font Awesome: http://fontawesome.io/
-- Image by Ossi Petruska: http://www.flickr.com/photos/10134557@N08/2527630813
-- AngularJS: http://angularjs.org/
-
-
 ## License (MIT):
 
-Copyright (C) 2014-2015 Sondre Bjellås - http://sondreb.com/
+Copyright (C) 2007-2024 Sondre Bjellås - http://sondreb.com/
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
