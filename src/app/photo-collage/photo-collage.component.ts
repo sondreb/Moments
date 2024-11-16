@@ -526,4 +526,14 @@ export class PhotoCollageComponent implements AfterViewInit {
 
     this.render();
   }
+
+  resetCollage() {
+    this.photos = [];
+    this.maxZIndex = 0;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.hoveredPhoto = null;
+    this.render();
+  }
 }
