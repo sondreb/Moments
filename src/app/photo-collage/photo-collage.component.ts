@@ -13,6 +13,11 @@ interface PhotoElement {
   scale: number;
 }
 
+interface HoveredPhoto extends PhotoElement {
+  screenX: number;
+  screenY: number;
+}
+
 @Component({
   selector: 'app-photo-collage',
   standalone: true,
@@ -41,6 +46,9 @@ export class PhotoCollageComponent implements AfterViewInit {
   private panX = 0;
   private panY = 0;
   private zoomPoint = { x: 0, y: 0 };
+  hoveredPhoto: HoveredPhoto | null = null;
+  controlsPosition = { x: 0, y: 0 };
+  private isOnControls = false;
 
   ngAfterViewInit() {
     this.canvas = this.canvasRef.nativeElement;
@@ -64,6 +72,8 @@ export class PhotoCollageComponent implements AfterViewInit {
     this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
     this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
     this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+    this.canvas.addEventListener('mousemove', this.handleHover.bind(this));
+    this.canvas.addEventListener('mouseleave', () => this.hoveredPhoto = null);
   }
 
   handleFileSelect(event: Event) {
@@ -144,6 +154,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     this.lastY = offsetY;
     this.selectedPhoto = this.findPhotoAtPosition(offsetX, offsetY);
     if (this.selectedPhoto) this.isDragging = true;
+    this.hoveredPhoto = null; // Hide controls when dragging
   }
 
   private handleMouseMove(event: MouseEvent) {
@@ -208,7 +219,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     } else if (this.touches.length === 2) {
       const rect = this.canvas.getBoundingClientRect();
       const x = (this.touches[0].clientX + this.touches[1].clientX) / 2 - rect.left;
-      const y = (this.touches[0].clientY + this.touches[1].clientY) / 2 - rect.top;
+      const y = (this.touches[0].clientX + this.touches[1].clientY) / 2 - rect.top;
       
       // Store zoom center point
       this.zoomPoint = {
@@ -272,5 +283,44 @@ export class PhotoCollageComponent implements AfterViewInit {
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  private handleHover(event: MouseEvent) {
+    if (!this.isDragging) {
+      const photo = this.findPhotoAtPosition(event.offsetX, event.offsetY);
+      if (photo) {
+        // Convert photo position to screen coordinates
+        const screenX = (photo.x * this.scale) + this.panX;
+        const screenY = (photo.y * this.scale) + this.panY;
+        
+        this.hoveredPhoto = {
+          ...photo,
+          screenX,
+          screenY
+        };
+        
+        // Position controls in center of photo
+        this.controlsPosition = {
+          x: screenX + ((photo.width * photo.scale) * this.scale) / 2,
+          y: screenY + ((photo.height * photo.scale) * this.scale) / 2
+        };
+      } else {
+        this.hoveredPhoto = null;
+      }
+    }
+  }
+
+  rotatePhoto(degrees: number) {
+    if (this.hoveredPhoto) {
+      this.hoveredPhoto.rotation += degrees * (Math.PI / 180);
+      this.render();
+    }
+  }
+
+  scalePhoto(factor: number) {
+    if (this.hoveredPhoto) {
+      this.hoveredPhoto.scale = Math.max(0.1, Math.min(5, this.hoveredPhoto.scale * factor));
+      this.render();
+    }
   }
 }

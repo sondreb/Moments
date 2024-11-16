@@ -1,7 +1,15 @@
 <div class="collage-container" 
      (dragover)="$event.preventDefault()" 
      (drop)="handleDrop($event)">
-  <canvas #canvas></canvas>
+  <div class="canvas-container">
+    <canvas #canvas></canvas>
+    <div *ngIf="hoveredPhoto" class="photo-controls" [style.left.px]="controlsPosition.x" [style.top.px]="controlsPosition.y">
+      <button (click)="rotatePhoto(-15)" class="control-btn">↺</button>
+      <button (click)="rotatePhoto(15)" class="control-btn">↻</button>
+      <button (click)="scalePhoto(0.9)" class="control-btn">-</button>
+      <button (click)="scalePhoto(1.1)" class="control-btn">+</button>
+    </div>
+  </div>
   <input #fileInput 
          type="file" 
          accept="image/*" 
