@@ -79,6 +79,11 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
       name: 'Random',
       icon: '⟰',
       apply: () => this.applyRandomLayout()
+    },
+    {
+      name: 'Compact Layout',
+      icon: '▣',
+      apply: () => this.applyCompactLayout()
     }
   ];
 
@@ -675,5 +680,120 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     this.panX = 0;
     this.panY = 0;
     this.render();
+  }
+
+  private applyCompactLayout() {
+    if (!this.photos.length) return;
+
+    const padding = 10; // Reduced padding
+    const containerWidth = this.canvas.width - padding * 2;
+    const containerHeight = this.canvas.height - padding * 2;
+
+    // Calculate total area and aspect ratios
+    const totalArea = containerWidth * containerHeight;
+    const areaPerPhoto = totalArea / this.photos.length;
+    const baseSize = Math.sqrt(areaPerPhoto);
+
+    // Prepare photos with their natural aspect ratios
+    const photoData = this.photos.map(photo => ({
+      photo,
+      aspect: photo.height / photo.width,
+      processed: false
+    }));
+
+    // Start with a random photo
+    let currentX = padding;
+    let currentY = padding;
+    let rowHeight = 0;
+    let rowWidthLeft = containerWidth;
+    let currentRow: typeof photoData = [];
+
+    // Process all photos
+    while (photoData.filter(p => !p.processed).length > 0) {
+      // Find best fitting photo for current row
+      const bestPhoto = this.findBestPhotoForRow(
+        photoData.filter(p => !p.processed),
+        rowWidthLeft,
+        baseSize
+      );
+
+      if (bestPhoto) {
+        bestPhoto.processed = true;
+        currentRow.push(bestPhoto);
+        
+        const photoWidth = baseSize / bestPhoto.aspect;
+        rowWidthLeft -= photoWidth;
+        rowHeight = Math.max(rowHeight, baseSize);
+
+        // If row is full or no more photos fit, arrange the row
+        if (rowWidthLeft < baseSize * 0.5 || photoData.filter(p => !p.processed).length === 0) {
+          this.arrangeRow(currentRow, currentX, currentY, containerWidth - (rowWidthLeft + padding), rowHeight);
+          
+          // Start new row
+          currentY += rowHeight + padding;
+          currentX = padding;
+          rowWidthLeft = containerWidth;
+          rowHeight = 0;
+          currentRow = [];
+        }
+      }
+    }
+
+    this.maxZIndex = this.photos.length - 1;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.render();
+  }
+
+  private findBestPhotoForRow(
+    availablePhotos: Array<{ photo: PhotoElement; aspect: number; processed: boolean }>,
+    widthLeft: number,
+    baseSize: number
+  ): { photo: PhotoElement; aspect: number; processed: boolean } | null {
+    if (availablePhotos.length === 0) return null;
+
+    // Find photo that best fits the remaining width
+    return availablePhotos.reduce((best, current) => {
+      const currentWidth = baseSize / current.aspect;
+      const bestWidth = best ? baseSize / best.aspect : Infinity;
+      
+      const currentFit = Math.abs(widthLeft - currentWidth);
+      const bestFit = Math.abs(widthLeft - bestWidth);
+      
+      return currentFit < bestFit ? current : best;
+    });
+  }
+
+  private arrangeRow(
+    row: Array<{ photo: PhotoElement; aspect: number }>,
+    startX: number,
+    startY: number,
+    rowWidth: number,
+    rowHeight: number
+  ) {
+    if (row.length === 0) return;
+
+    // Calculate scale factor to fill width exactly
+    const totalNaturalWidth = row.reduce((sum, item) => sum + (rowHeight / item.aspect), 0);
+    const scale = rowWidth / totalNaturalWidth;
+
+    // Position each photo in the row
+    let currentX = startX;
+    row.forEach((item, index) => {
+      const photo = item.photo;
+      const photoWidth = (rowHeight / item.aspect) * scale;
+      
+      // Update photo properties
+      photo.width = photoWidth;
+      photo.height = rowHeight;
+      photo.x = currentX;
+      photo.y = startY;
+      photo.rotation = 0;
+      photo.scale = 1;
+      photo.zIndex = index;
+
+      currentX += photoWidth;
+    });
   }
 }
