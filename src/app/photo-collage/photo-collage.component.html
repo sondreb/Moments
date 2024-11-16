@@ -9,10 +9,18 @@
          [style.top.px]="controlsPosition.y"
          (mouseenter)="onControlsMouseEnter()"
          (mouseleave)="onControlsMouseLeave()">
-      <button (click)="rotatePhoto(-15)" class="control-btn">↺</button>
-      <button (click)="rotatePhoto(15)" class="control-btn">↻</button>
-      <button (click)="scalePhoto(0.9)" class="control-btn">-</button>
-      <button (click)="scalePhoto(1.1)" class="control-btn">+</button>
+      <div class="controls-row">
+        <button (click)="rotatePhoto(-15)" class="control-btn">↺</button>
+        <button (click)="rotatePhoto(15)" class="control-btn">↻</button>
+        <button (click)="scalePhoto(0.9)" class="control-btn">-</button>
+        <button (click)="scalePhoto(1.1)" class="control-btn">+</button>
+      </div>
+      <div class="controls-row">
+        <button (click)="moveBackward(hoveredPhoto)" class="control-btn">↓</button>
+        <button (click)="moveForward(hoveredPhoto)" class="control-btn">↑</button>
+        <button (click)="moveToBack(hoveredPhoto)" class="control-btn">⤓</button>
+        <button (click)="moveToFront(hoveredPhoto)" class="control-btn">⤒</button>
+      </div>
     </div>
   </div>
   <input #fileInput 

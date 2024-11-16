@@ -46,6 +46,9 @@ export class PhotoCollageComponent implements AfterViewInit {
   private panX = 0;
   private panY = 0;
   private zoomPoint = { x: 0, y: 0 };
+  private isPanning = false;
+  private lastClientX = 0;
+  private lastClientY = 0;
   hoveredPhoto: HoveredPhoto | null = null;
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
@@ -156,28 +159,53 @@ export class PhotoCollageComponent implements AfterViewInit {
     const { offsetX, offsetY } = event;
     this.lastX = offsetX;
     this.lastY = offsetY;
+    this.lastClientX = event.clientX;
+    this.lastClientY = event.clientY;
+    
     this.selectedPhoto = this.findPhotoAtPosition(offsetX, offsetY);
-    if (this.selectedPhoto) this.isDragging = true;
-    this.hoveredPhoto = null; // Hide controls when dragging
+    if (this.selectedPhoto) {
+      if (event.altKey) {
+        this.moveToBack(this.selectedPhoto);
+      } else {
+        this.isDragging = true;
+      }
+    } else {
+      this.isPanning = true;
+    }
+    this.hoveredPhoto = null;
   }
 
   private handleMouseMove(event: MouseEvent) {
-    if (!this.isDragging || !this.selectedPhoto) return;
-    
-    const dx = event.offsetX - this.lastX;
-    const dy = event.offsetY - this.lastY;
-    
-    this.selectedPhoto.x += dx;
-    this.selectedPhoto.y += dy;
-    
-    this.lastX = event.offsetX;
-    this.lastY = event.offsetY;
-    
-    this.render();
+    if (this.isDragging && this.selectedPhoto) {
+      const dx = event.offsetX - this.lastX;
+      const dy = event.offsetY - this.lastY;
+      
+      this.selectedPhoto.x += dx / this.scale;
+      this.selectedPhoto.y += dy / this.scale;
+      
+      this.lastX = event.offsetX;
+      this.lastY = event.offsetY;
+      this.lastClientX = event.clientX;
+      this.lastClientY = event.clientY;
+      
+      this.render();
+    } else if (this.isPanning) {
+      const dx = event.clientX - this.lastClientX;
+      const dy = event.clientY - this.lastClientY;
+      
+      this.panX += dx;
+      this.panY += dy;
+      
+      this.lastClientX = event.clientX;
+      this.lastClientY = event.clientY;
+      
+      this.render();
+    }
   }
 
   private handleMouseUp() {
     this.isDragging = false;
+    this.isPanning = false;
     this.selectedPhoto = null;
   }
 
@@ -211,6 +239,9 @@ export class PhotoCollageComponent implements AfterViewInit {
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
       
+      this.lastClientX = touch.clientX;
+      this.lastClientY = touch.clientY;
+      
       // Check for double tap
       const now = Date.now();
       if (now - this.lastTapTime < 300) {
@@ -218,8 +249,17 @@ export class PhotoCollageComponent implements AfterViewInit {
       }
       this.lastTapTime = now;
 
-      // Handle single touch as mouse down
-      this.handleMouseDown({ offsetX: x, offsetY: y } as MouseEvent);
+      // Handle single touch
+      const photo = this.findPhotoAtPosition(x, y);
+      if (photo) {
+        this.selectedPhoto = photo;
+        this.isDragging = true;
+      } else {
+        this.isPanning = true;
+      }
+      
+      this.lastX = x;
+      this.lastY = y;
     } else if (this.touches.length === 2) {
       const rect = this.canvas.getBoundingClientRect();
       const x = (this.touches[0].clientX + this.touches[1].clientX) / 2 - rect.left;
@@ -240,13 +280,35 @@ export class PhotoCollageComponent implements AfterViewInit {
     event.preventDefault();
     const touches = Array.from(event.touches);
 
-    if (touches.length === 1 && this.isDragging) {
+    if (touches.length === 1) {
       const touch = touches[0];
       const rect = this.canvas.getBoundingClientRect();
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
       
-      this.handleMouseMove({ offsetX: x, offsetY: y } as MouseEvent);
+      if (this.isDragging && this.selectedPhoto) {
+        const dx = x - this.lastX;
+        const dy = y - this.lastY;
+        
+        this.selectedPhoto.x += dx / this.scale;
+        this.selectedPhoto.y += dy / this.scale;
+        
+        this.lastX = x;
+        this.lastY = y;
+        
+        this.render();
+      } else if (this.isPanning) {
+        const dx = touch.clientX - this.lastClientX;
+        const dy = touch.clientY - this.lastClientY;
+        
+        this.panX += dx;
+        this.panY += dy;
+        
+        this.lastClientX = touch.clientX;
+        this.lastClientY = touch.clientY;
+        
+        this.render();
+      }
     } else if (touches.length === 2) {
       const currentDistance = this.getTouchDistance(touches[0], touches[1]);
       const scaleFactor = currentDistance / this.initialTouchDistance;
@@ -356,5 +418,49 @@ export class PhotoCollageComponent implements AfterViewInit {
       clientY: this.lastY + rect.top
     });
     this.handleHover(event as any);
+  }
+
+  moveForward(photo: PhotoElement) {
+    const currentIndex = this.photos.find(p => p.id === photo.id)?.zIndex || 0;
+    const nextPhoto = this.photos.find(p => p.zIndex === currentIndex + 1);
+    
+    if (nextPhoto) {
+      nextPhoto.zIndex = currentIndex;
+      photo.zIndex = currentIndex + 1;
+      this.render();
+    }
+  }
+
+  moveBackward(photo: PhotoElement) {
+    const currentIndex = this.photos.find(p => p.id === photo.id)?.zIndex || 0;
+    const prevPhoto = this.photos.find(p => p.zIndex === currentIndex - 1);
+    
+    if (prevPhoto) {
+      prevPhoto.zIndex = currentIndex;
+      photo.zIndex = currentIndex - 1;
+      this.render();
+    }
+  }
+
+  moveToBack(photo: PhotoElement) {
+    // Shift all photos up by 1
+    this.photos.forEach(p => {
+      if (p.zIndex < photo.zIndex) {
+        p.zIndex += 1;
+      }
+    });
+    photo.zIndex = 0;
+    this.render();
+  }
+
+  moveToFront(photo: PhotoElement) {
+    // Shift all photos down by 1
+    this.photos.forEach(p => {
+      if (p.zIndex > photo.zIndex) {
+        p.zIndex -= 1;
+      }
+    });
+    photo.zIndex = this.maxZIndex;
+    this.render();
   }
 }

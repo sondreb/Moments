@@ -58,6 +58,7 @@ canvas {
 .photo-controls {
   position: absolute;
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 8px;
   background: rgba(0, 0, 0, 0.5);
@@ -84,4 +85,10 @@ canvas {
 
 .control-btn:hover {
   background: #eee;
+}
+
+.controls-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
