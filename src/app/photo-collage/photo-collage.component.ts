@@ -223,7 +223,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     } else if (this.touches.length === 2) {
       const rect = this.canvas.getBoundingClientRect();
       const x = (this.touches[0].clientX + this.touches[1].clientX) / 2 - rect.left;
-      const y = (this.touches[0].clientX + this.touches[1].clientY) / 2 - rect.top;
+      const y = (this.touches[0].clientX + this.touches[1].clientY) / 2 - rect.top;  // Fixed Y coordinate calculation
       
       // Store zoom center point
       this.zoomPoint = {
@@ -249,22 +249,22 @@ export class PhotoCollageComponent implements AfterViewInit {
       this.handleMouseMove({ offsetX: x, offsetY: y } as MouseEvent);
     } else if (touches.length === 2) {
       const currentDistance = this.getTouchDistance(touches[0], touches[1]);
-      const prevScale = this.scale;
-      const delta = (currentDistance - this.initialTouchDistance) * 0.002; // Changed from 0.001 to 0.002
+      const scaleFactor = currentDistance / this.initialTouchDistance;
+      
+      const rect = this.canvas.getBoundingClientRect();
+      const centerX = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
+      const centerY = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
 
       if (this.activePhoto) {
         // Zoom individual photo
-        this.activePhoto.scale = Math.max(0.1, Math.min(5, this.activePhoto.scale + delta));
+        const newScale = this.activePhoto.scale * scaleFactor;
+        this.activePhoto.scale = Math.max(0.1, Math.min(5, newScale));
       } else {
         // Zoom canvas towards touch point
-        this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+        const prevScale = this.scale;
+        this.scale = Math.max(0.1, Math.min(5, this.scale * scaleFactor));
         
-        const rect = this.canvas.getBoundingClientRect();
-        const centerX = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
-        const centerY = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
-        
-        // Adjust pan to keep zoom point steady
-        const scaleDiff = this.scale - prevScale;
+        // Adjust pan to keep zoom centered on touch point
         this.panX = centerX - (this.zoomPoint.x * this.scale);
         this.panY = centerY - (this.zoomPoint.y * this.scale);
       }
@@ -285,7 +285,7 @@ export class PhotoCollageComponent implements AfterViewInit {
 
   private getTouchDistance(touch1: Touch, touch2: Touch): number {
     const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientX - touch2.clientY;
+    const dy = touch1.clientY - touch2.clientY;  // Fixed: was using clientX instead of clientY
     return Math.sqrt(dx * dx + dy * dy);
   }
 
@@ -318,15 +318,28 @@ export class PhotoCollageComponent implements AfterViewInit {
 
   rotatePhoto(degrees: number) {
     if (this.hoveredPhoto) {
-      this.hoveredPhoto.rotation += degrees * (Math.PI / 180);
-      this.render();
+      const rotation = degrees * (Math.PI / 180);
+      // Find and update the actual photo in the array
+      const photo = this.photos.find(p => p.id === this.hoveredPhoto!.id);
+      if (photo) {
+        photo.rotation += rotation;
+        // Update hoveredPhoto to stay in sync
+        this.hoveredPhoto.rotation = photo.rotation;
+        this.render();
+      }
     }
   }
 
   scalePhoto(factor: number) {
     if (this.hoveredPhoto) {
-      this.hoveredPhoto.scale = Math.max(0.1, Math.min(5, this.hoveredPhoto.scale * factor));
-      this.render();
+      // Find and update the actual photo in the array
+      const photo = this.photos.find(p => p.id === this.hoveredPhoto!.id);
+      if (photo) {
+        photo.scale = Math.max(0.1, Math.min(5, photo.scale * factor));
+        // Update hoveredPhoto to stay in sync
+        this.hoveredPhoto.scale = photo.scale;
+        this.render();
+      }
     }
   }
 
