@@ -158,7 +158,8 @@ export class PhotoCollageComponent implements AfterViewInit {
     };
 
     const prevScale = this.scale;
-    const delta = -Math.sign(event.deltaY) * 0.1;
+    // Reduce sensitivity by dividing delta by 4
+    const delta = -Math.sign(event.deltaY) * 0.025; // Changed from 0.1 to 0.025
     this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
 
     // Adjust pan to keep zoom centered on cursor
