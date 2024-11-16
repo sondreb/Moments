@@ -38,6 +38,9 @@ export class PhotoCollageComponent implements AfterViewInit {
   private lastTapTime = 0;
   private initialTouchDistance = 0;
   private activePhoto: PhotoElement | null = null;
+  private panX = 0;
+  private panY = 0;
+  private zoomPoint = { x: 0, y: 0 };
 
   ngAfterViewInit() {
     this.canvas = this.canvasRef.nativeElement;
@@ -101,7 +104,11 @@ export class PhotoCollageComponent implements AfterViewInit {
     
     const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
     
+    // Apply canvas transforms
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.translate(this.panX, this.panY);
     this.ctx.scale(this.scale, this.scale);
+    
     for (const photo of sortedPhotos) {
       const img = new Image();
       img.src = photo.url;
@@ -160,9 +167,13 @@ export class PhotoCollageComponent implements AfterViewInit {
   }
 
   private findPhotoAtPosition(x: number, y: number): PhotoElement | null {
+    // Transform screen coordinates to canvas coordinates
+    const canvasX = (x - this.panX) / this.scale;
+    const canvasY = (y - this.panY) / this.scale;
+    
     return this.photos.find(photo => 
-      x >= photo.x && x <= photo.x + photo.width &&
-      y >= photo.y && y <= photo.y + photo.height
+      canvasX >= photo.x && canvasX <= photo.x + photo.width &&
+      canvasY >= photo.y && canvasY <= photo.y + photo.height
     ) || null;
   }
 
@@ -199,6 +210,12 @@ export class PhotoCollageComponent implements AfterViewInit {
       const x = (this.touches[0].clientX + this.touches[1].clientX) / 2 - rect.left;
       const y = (this.touches[0].clientY + this.touches[1].clientY) / 2 - rect.top;
       
+      // Store zoom center point
+      this.zoomPoint = {
+        x: (x - this.panX) / this.scale,
+        y: (y - this.panY) / this.scale
+      };
+      
       this.activePhoto = this.findPhotoAtPosition(x, y);
       this.initialTouchDistance = this.getTouchDistance(this.touches[0], this.touches[1]);
     }
@@ -217,14 +234,24 @@ export class PhotoCollageComponent implements AfterViewInit {
       this.handleMouseMove({ offsetX: x, offsetY: y } as MouseEvent);
     } else if (touches.length === 2) {
       const currentDistance = this.getTouchDistance(touches[0], touches[1]);
+      const prevScale = this.scale;
       const delta = (currentDistance - this.initialTouchDistance) * 0.001;
 
       if (this.activePhoto) {
         // Zoom individual photo
         this.activePhoto.scale = Math.max(0.1, Math.min(5, this.activePhoto.scale + delta));
       } else {
-        // Zoom entire canvas
+        // Zoom canvas towards touch point
         this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const centerX = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
+        const centerY = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
+        
+        // Adjust pan to keep zoom point steady
+        const scaleDiff = this.scale - prevScale;
+        this.panX = centerX - (this.zoomPoint.x * this.scale);
+        this.panY = centerY - (this.zoomPoint.y * this.scale);
       }
       
       this.initialTouchDistance = currentDistance;
