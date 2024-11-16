@@ -235,7 +235,7 @@ export class PhotoCollageComponent implements AfterViewInit {
     } else if (touches.length === 2) {
       const currentDistance = this.getTouchDistance(touches[0], touches[1]);
       const prevScale = this.scale;
-      const delta = (currentDistance - this.initialTouchDistance) * 0.001;
+      const delta = (currentDistance - this.initialTouchDistance) * 0.002; // Changed from 0.001 to 0.002
 
       if (this.activePhoto) {
         // Zoom individual photo
