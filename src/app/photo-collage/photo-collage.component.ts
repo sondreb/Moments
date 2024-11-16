@@ -421,23 +421,46 @@ export class PhotoCollageComponent implements AfterViewInit {
   }
 
   moveForward(photo: PhotoElement) {
-    const currentIndex = this.photos.find(p => p.id === photo.id)?.zIndex || 0;
-    const nextPhoto = this.photos.find(p => p.zIndex === currentIndex + 1);
-    
+    const currentPhoto = this.photos.find(p => p.id === photo.id);
+    if (!currentPhoto) return;
+
+    // Find the photo with next highest z-index
+    const nextPhoto = this.photos.find(p => p.zIndex > currentPhoto.zIndex);
     if (nextPhoto) {
-      nextPhoto.zIndex = currentIndex;
-      photo.zIndex = currentIndex + 1;
+      // Swap z-indices
+      const temp = nextPhoto.zIndex;
+      nextPhoto.zIndex = currentPhoto.zIndex;
+      currentPhoto.zIndex = temp;
+
+      // Update hovered photo to stay in sync
+      if (this.hoveredPhoto && this.hoveredPhoto.id === currentPhoto.id) {
+        this.hoveredPhoto.zIndex = currentPhoto.zIndex;
+      }
+      
       this.render();
     }
   }
 
   moveBackward(photo: PhotoElement) {
-    const currentIndex = this.photos.find(p => p.id === photo.id)?.zIndex || 0;
-    const prevPhoto = this.photos.find(p => p.zIndex === currentIndex - 1);
-    
+    const currentPhoto = this.photos.find(p => p.id === photo.id);
+    if (!currentPhoto) return;
+
+    // Find the photo with next lowest z-index
+    const prevPhoto = [...this.photos]
+      .sort((a, b) => b.zIndex - a.zIndex)
+      .find(p => p.zIndex < currentPhoto.zIndex);
+
     if (prevPhoto) {
-      prevPhoto.zIndex = currentIndex;
-      photo.zIndex = currentIndex - 1;
+      // Swap z-indices
+      const temp = prevPhoto.zIndex;
+      prevPhoto.zIndex = currentPhoto.zIndex;
+      currentPhoto.zIndex = temp;
+
+      // Update hovered photo to stay in sync
+      if (this.hoveredPhoto && this.hoveredPhoto.id === currentPhoto.id) {
+        this.hoveredPhoto.zIndex = currentPhoto.zIndex;
+      }
+      
       this.render();
     }
   }
