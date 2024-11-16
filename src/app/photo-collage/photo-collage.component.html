@@ -1,6 +1,15 @@
 <div class="collage-container" 
      (dragover)="$event.preventDefault()" 
      (drop)="handleDrop($event)">
+  <div class="toolbar">
+    <span class="toolbar-label">Layouts:</span>
+    <button *ngFor="let preset of presets" 
+            class="preset-btn" 
+            (click)="preset.apply()"
+            [title]="preset.name">
+      {{preset.icon}}
+    </button>
+  </div>
   <div class="canvas-container">
     <canvas #canvas></canvas>
     <div *ngIf="hoveredPhoto" 

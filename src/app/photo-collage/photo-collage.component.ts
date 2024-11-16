@@ -18,6 +18,12 @@ interface HoveredPhoto extends PhotoElement {
   screenY: number;
 }
 
+interface CollagePreset {
+  name: string;
+  icon: string;
+  apply: () => void;
+}
+
 @Component({
   selector: 'app-photo-collage',
   standalone: true,
@@ -52,6 +58,29 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   hoveredPhoto: HoveredPhoto | null = null;
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
+
+  presets: CollagePreset[] = [
+    {
+      name: 'Grid Layout',
+      icon: '⊞',
+      apply: () => this.applyGridLayout()
+    },
+    {
+      name: 'Stack',
+      icon: '▤',
+      apply: () => this.applyStackLayout()
+    },
+    {
+      name: 'Circle',
+      icon: '◯',
+      apply: () => this.applyCircleLayout()
+    },
+    {
+      name: 'Random',
+      icon: '⟰',
+      apply: () => this.applyRandomLayout()
+    }
+  ];
 
   private resizeHandler = () => {
     this.setupCanvas();
@@ -549,6 +578,102 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     this.panX = 0;
     this.panY = 0;
     this.hoveredPhoto = null;
+    this.render();
+  }
+
+  private applyGridLayout() {
+    if (!this.photos.length) return;
+
+    const margin = 20;
+    const containerWidth = this.canvas.width - margin * 2;
+    const containerHeight = this.canvas.height - margin * 2;
+    const count = this.photos.length;
+    const cols = Math.ceil(Math.sqrt(count));
+    const rows = Math.ceil(count / cols);
+    const cellWidth = containerWidth / cols;
+    const cellHeight = containerHeight / rows;
+
+    this.photos.forEach((photo, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const aspectRatio = photo.height / photo.width;
+      
+      photo.rotation = 0;
+      photo.scale = 1;
+      photo.width = Math.min(cellWidth - margin, cellHeight / aspectRatio - margin);
+      photo.height = photo.width * aspectRatio;
+      photo.x = margin + col * cellWidth + (cellWidth - photo.width) / 2;
+      photo.y = margin + row * cellHeight + (cellHeight - photo.height) / 2;
+      photo.zIndex = index;
+    });
+
+    this.maxZIndex = this.photos.length - 1;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.render();
+  }
+
+  private applyStackLayout() {
+    if (!this.photos.length) return;
+
+    const centerX = this.canvas.width / 2;
+    const centerY = this.canvas.height / 2;
+    const baseRotation = (Math.random() - 0.5) * 0.5;
+
+    this.photos.forEach((photo, index) => {
+      photo.rotation = baseRotation + (Math.random() - 0.5) * 0.3;
+      photo.scale = 1;
+      photo.x = centerX - photo.width / 2 + (Math.random() - 0.5) * 50;
+      photo.y = centerY - photo.height / 2 + (Math.random() - 0.5) * 50;
+      photo.zIndex = index;
+    });
+
+    this.maxZIndex = this.photos.length - 1;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.render();
+  }
+
+  private applyCircleLayout() {
+    if (!this.photos.length) return;
+
+    const centerX = this.canvas.width / 2;
+    const centerY = this.canvas.height / 2;
+    const radius = Math.min(this.canvas.width, this.canvas.height) * 0.3;
+    
+    this.photos.forEach((photo, index) => {
+      const angle = (index / this.photos.length) * Math.PI * 2;
+      photo.rotation = angle + Math.PI/2;
+      photo.scale = 0.8;
+      photo.x = centerX + Math.cos(angle) * radius - photo.width/2;
+      photo.y = centerY + Math.sin(angle) * radius - photo.height/2;
+      photo.zIndex = index;
+    });
+
+    this.maxZIndex = this.photos.length - 1;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.render();
+  }
+
+  private applyRandomLayout() {
+    if (!this.photos.length) return;
+
+    this.photos.forEach((photo, index) => {
+      photo.rotation = (Math.random() - 0.5) * Math.PI;
+      photo.scale = 0.5 + Math.random() * 1;
+      photo.x = Math.random() * (this.canvas.width - photo.width);
+      photo.y = Math.random() * (this.canvas.height - photo.height);
+      photo.zIndex = index;
+    });
+
+    this.maxZIndex = this.photos.length - 1;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
     this.render();
   }
 }
