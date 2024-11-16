@@ -58,6 +58,7 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   hoveredPhoto: HoveredPhoto | null = null;
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
+  private imageCache: Map<string, HTMLImageElement> = new Map();
 
   presets: CollagePreset[] = [
     {
@@ -100,6 +101,10 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.photos.forEach(photo => {
+      URL.revokeObjectURL(photo.url);
+      this.imageCache.delete(photo.url);
+    });
     window.removeEventListener('resize', this.resizeHandler);
   }
 
@@ -146,26 +151,41 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   private async loadImages(files: File[]) {
     for (const file of files) {
       const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.src = url;
-      await img.decode();
       
-      this.photos.push({
-        id: Date.now() + Math.random(),
-        url,
-        x: Math.random() * (this.canvas.width - 200),
-        y: Math.random() * (this.canvas.height - 200),
-        width: 200,
-        height: (200 * img.height) / img.width,
-        zIndex: ++this.maxZIndex,
-        scale: 1,
-        rotation: (Math.random() - 0.5) * 0.5
-      });
+      try {
+        // Create and cache the image
+        const img = new Image();
+        const loadPromise = new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject();
+        });
+        img.src = url;
+        await loadPromise;
+        
+        this.imageCache.set(url, img);
+        
+        this.photos.push({
+          id: Date.now() + Math.random(),
+          url,
+          x: Math.random() * (this.canvas.width - 200),
+          y: Math.random() * (this.canvas.height - 200),
+          width: 200,
+          height: (200 * img.height) / img.width,
+          zIndex: ++this.maxZIndex,
+          scale: 1,
+          rotation: (Math.random() - 0.5) * 0.5
+        });
+      } catch (error) {
+        console.error('Failed to load image:', error);
+        URL.revokeObjectURL(url);
+      }
     }
     this.render();
   }
 
   private render() {
+    if (!this.ctx) return;
+    
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
@@ -176,8 +196,8 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     this.ctx.scale(this.scale, this.scale);
     
     for (const photo of sortedPhotos) {
-      const img = new Image();
-      img.src = photo.url;
+      const img = this.imageCache.get(photo.url);
+      if (!img) continue; // Skip if image not loaded
       
       this.ctx.save();
       this.ctx.translate(photo.x + photo.width/2, photo.y + photo.height/2);
@@ -186,6 +206,7 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
       this.ctx.drawImage(img, -photo.width/2, -photo.height/2, photo.width, photo.height);
       this.ctx.restore();
     }
+    
     this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
   }
 
@@ -586,6 +607,11 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   }
 
   resetCollage() {
+    // Clean up all object URLs and clear image cache
+    this.photos.forEach(photo => {
+      URL.revokeObjectURL(photo.url);
+      this.imageCache.delete(photo.url);
+    });
     this.photos = [];
     this.maxZIndex = 0;
     this.scale = 1;
@@ -601,6 +627,7 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     if (index !== -1) {
       // Remove the photo's object URL to prevent memory leaks
       URL.revokeObjectURL(photo.url);
+      this.imageCache.delete(photo.url);
       this.photos.splice(index, 1);
       
       // Reset hovered photo if it was the removed one
