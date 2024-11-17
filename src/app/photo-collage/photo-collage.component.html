@@ -43,32 +43,29 @@
          style="display: none">
   <div class="controls">
     <button (click)="fileInput.click()">Add Photos</button>
-    <div class="save-group">
-      <div class="save-options">
-        <div class="size-label">Size:</div>
-        <div class="size-buttons">
-          <button 
-            (click)="setSaveSize('normal')" 
-            [class.active]="saveSize === 'normal'"
-            class="size-btn">
-            Normal
-          </button>
-          <button 
-            (click)="setSaveSize('medium')" 
-            [class.active]="saveSize === 'medium'"
-            class="size-btn">
-            Medium
-          </button>
-          <button 
-            (click)="setSaveSize('large')" 
-            [class.active]="saveSize === 'large'"
-            class="size-btn">
-            Large
+    <button (click)="showSaveOptions()">Save Collage</button>
+    <button (click)="resetCollage()">Reset</button>
+  </div>
+
+  <!-- Save Dialog -->
+  <div class="modal-overlay" *ngIf="showSaveDialog" (click)="closeSaveDialog()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Save Collage</h2>
+        <button class="close-btn" (click)="closeSaveDialog()">×</button>
+      </div>
+      <div class="modal-content">
+        <p>Choose output size:</p>
+        <div class="size-options">
+          <button *ngFor="let option of sizeOptions" 
+                  class="size-option" 
+                  (click)="saveWithSize(option.id)">
+            <strong>{{option.name}}</strong>
+            <span>{{option.description}}</span>
+            <span class="pixels">{{canvas.width * option.scale}}×{{canvas.height * option.scale}}px</span>
           </button>
         </div>
       </div>
-      <button (click)="saveCollage()">Save Collage ({{saveSize}})</button>
     </div>
-    <button (click)="resetCollage()">Reset</button>
   </div>
 </div>

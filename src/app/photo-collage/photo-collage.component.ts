@@ -59,7 +59,28 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   controlsPosition = { x: 0, y: 0 };
   private isOnControls = false;
   private imageCache: Map<string, HTMLImageElement> = new Map();
-  saveSize: 'normal' | 'medium' | 'large' = 'medium';
+  saveSize: 'small' | 'normal' | 'medium' | 'large' = 'medium';
+  showSaveDialog = false;
+  sizeOptions = [
+    { id: 'small', name: 'Small', scale: 1, description: '1x - Original Size' },
+    { id: 'normal', name: 'Normal', scale: 2, description: '2x - Good for sharing' },
+    { id: 'medium', name: 'Medium', scale: 3, description: '3x - Great for prints' },
+    { id: 'large', name: 'Large', scale: 6, description: '6x - Maximum quality' }
+  ] as const;
+
+  showSaveOptions() {
+    this.showSaveDialog = true;
+  }
+
+  saveWithSize(size: 'small' | 'normal' | 'medium' | 'large') {
+    this.saveSize = size;
+    this.saveCollage();
+    this.showSaveDialog = false;
+  }
+
+  closeSaveDialog() {
+    this.showSaveDialog = false;
+  }
 
   presets: CollagePreset[] = [
     {
@@ -212,15 +233,9 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
   }
 
   saveCollage() {
-    // Adjust scale based on selected size
-    const scales = {
-      normal: 2,
-      medium: 3,
-      large: 6
-    };
-    const scale = scales[this.saveSize];
+    const option = this.sizeOptions.find(opt => opt.id === this.saveSize);
+    const scale = option?.scale || 3; // Default to medium if not found
     
-    // Rest of the saveCollage method remains the same
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = this.canvas.width * scale;
     tempCanvas.height = this.canvas.height * scale;
@@ -264,7 +279,7 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     link.click();
   }
 
-  setSaveSize(size: 'normal' | 'medium' | 'large') {
+  setSaveSize(size: 'small' | 'normal' | 'medium' | 'large') {
     this.saveSize = size;
   }
 
