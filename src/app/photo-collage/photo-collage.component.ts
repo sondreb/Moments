@@ -68,6 +68,8 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     { id: 'large', name: 'Large', scale: 6, description: '6x - Maximum quality' }
   ] as const;
 
+  isSaving = false;
+
   showSaveOptions() {
     this.showSaveDialog = true;
   }
@@ -232,51 +234,56 @@ export class PhotoCollageComponent implements AfterViewInit, OnDestroy {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
   }
 
-  saveCollage() {
-    const option = this.sizeOptions.find(opt => opt.id === this.saveSize);
-    const scale = option?.scale || 3; // Default to medium if not found
-    
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = this.canvas.width * scale;
-    tempCanvas.height = this.canvas.height * scale;
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    if (!tempCtx) return;
-    
-    // Clear and prepare the temporary canvas
-    tempCtx.fillStyle = 'white';
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    
-    // Sort photos by z-index
-    const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
-    
-    // Apply the same transforms as the main canvas, but scaled up
-    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
-    tempCtx.translate(this.panX * scale, this.panY * scale);
-    tempCtx.scale(this.scale * scale, this.scale * scale);
-    
-    // Draw each photo at high resolution
-    for (const photo of sortedPhotos) {
-      const img = this.imageCache.get(photo.url);
-      if (!img) continue;
+  async saveCollage() {
+    this.isSaving = true;
+    try {
+      const option = this.sizeOptions.find(opt => opt.id === this.saveSize);
+      const scale = option?.scale || 3;
       
-      tempCtx.save();
-      tempCtx.translate(photo.x + photo.width/2, photo.y + photo.height/2);
-      tempCtx.rotate(photo.rotation);
-      tempCtx.scale(photo.scale, photo.scale);
-      tempCtx.drawImage(img, -photo.width/2, -photo.height/2, photo.width, photo.height);
-      tempCtx.restore();
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = this.canvas.width * scale;
+      tempCanvas.height = this.canvas.height * scale;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      if (!tempCtx) return;
+      
+      // Clear and prepare the temporary canvas
+      tempCtx.fillStyle = 'white';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Sort photos by z-index
+      const sortedPhotos = [...this.photos].sort((a, b) => a.zIndex - b.zIndex);
+      
+      // Apply the same transforms as the main canvas, but scaled up
+      tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+      tempCtx.translate(this.panX * scale, this.panY * scale);
+      tempCtx.scale(this.scale * scale, this.scale * scale);
+      
+      // Draw each photo at high resolution
+      for (const photo of sortedPhotos) {
+        const img = this.imageCache.get(photo.url);
+        if (!img) continue;
+        
+        tempCtx.save();
+        tempCtx.translate(photo.x + photo.width/2, photo.y + photo.height/2);
+        tempCtx.rotate(photo.rotation);
+        tempCtx.scale(photo.scale, photo.scale);
+        tempCtx.drawImage(img, -photo.width/2, -photo.height/2, photo.width, photo.height);
+        tempCtx.restore();
+      }
+      
+      // Reset transform
+      tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+      
+      // Create download link
+      const dataUrl = tempCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'collage.png';
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      this.isSaving = false;
     }
-    
-    // Reset transform
-    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
-    
-    // Create download link
-    const dataUrl = tempCanvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = 'collage.png';
-    link.href = dataUrl;
-    link.click();
   }
 
   setSaveSize(size: 'small' | 'normal' | 'medium' | 'large') {

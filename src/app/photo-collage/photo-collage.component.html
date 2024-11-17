@@ -56,14 +56,19 @@
       </div>
       <div class="modal-content">
         <p>Choose output size:</p>
-        <div class="size-options">
+        <div class="size-options" [class.disabled]="isSaving">
           <button *ngFor="let option of sizeOptions" 
                   class="size-option" 
-                  (click)="saveWithSize(option.id)">
+                  (click)="saveWithSize(option.id)"
+                  [disabled]="isSaving">
             <strong>{{option.name}}</strong>
             <span>{{option.description}}</span>
             <span class="pixels">{{canvas.width * option.scale}}×{{canvas.height * option.scale}}px</span>
           </button>
+        </div>
+        <div class="saving-indicator" *ngIf="isSaving">
+          <div class="spinner"></div>
+          <span>Saving...</span>
         </div>
       </div>
     </div>
