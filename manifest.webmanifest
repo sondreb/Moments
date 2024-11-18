@@ -1,6 +1,8 @@
 {
   "name": "Moments",
   "short_name": "Moments",
+  "author": "SondreB",
+  "description": "A simple collage app.",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
